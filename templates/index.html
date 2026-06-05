@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyTrace — Flight Route Contrail Optimizer</title>
+  <meta name="description" content="AI-powered contrail detection and flight route optimization. Analyze satellite imagery to identify contrail-forming zones and optimize airline routes for reduced climate impact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── NAVBAR ───────────────────────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <span class="brand-icon">✦</span>
+      <span class="brand-text">SkyTrace</span>
+    </div>
+    <div class="nav-pills">
+      <span class="badge badge-model">U-Net + EfficientNet-B3</span>
+      <span class="badge badge-dice">Dice 0.4827</span>
+      <span class="badge badge-live" id="modelStatus">⬤ Loading…</span>
+    </div>
+    <div class="nav-user">
+      <div class="user-info">
+        <span class="user-avatar">{{ user_name[0] | upper }}</span>
+        <div class="user-details">
+          <span class="user-name">{{ user_name }}</span>
+          <span class="user-role">{{ user_role }}</span>
+        </div>
+      </div>
+      <a href="/logout" class="btn-logout" title="Sign Out">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ──────────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="star-field" id="starField"></div>
+    <div class="hero-glow glow-1"></div>
+    <div class="hero-glow glow-2"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">✈️ Aviation Climate Intelligence</div>
+    <h1 class="hero-title">
+      Flight Route<br/>
+      <span class="gradient-text">Contrail Optimizer</span>
+    </h1>
+    <p class="hero-desc">
+      Analyze satellite imagery to detect contrail-forming zones and optimize
+      airline flight routes — reducing aviation's climate impact by up to 54%.
+    </p>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hstat-val">25</span><span class="hstat-lbl">Epochs Trained</span></div>
+      <div class="hstat-div"></div>
+      <div class="hstat"><span class="hstat-val">8,000</span><span class="hstat-lbl">Training Records</span></div>
+      <div class="hstat-div"></div>
+      <div class="hstat"><span class="hstat-val">0.48</span><span class="hstat-lbl">Best Dice Score</span></div>
+      <div class="hstat-div"></div>
+      <div class="hstat"><span class="hstat-val">9-CH</span><span class="hstat-lbl">Temporal Input</span></div>
+    </div>
+    <a href="#optimizer-section" class="btn-primary" id="tryBtn">
+      Optimize Routes <span class="btn-arrow">↓</span>
+    </a>
+  </div>
+</section>
+
+<!-- ── ROUTE OPTIMIZER SECTION ────────────────────────────────────────────────── -->
+<section class="section" id="optimizer-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">✈️ Route Optimizer</h2>
+      <p class="section-sub">Upload a satellite image to scan for contrail-forming zones, then draw your planned flight route</p>
+    </div>
+
+    <!-- STEP 1: Upload Satellite Scan -->
+    <div class="optimizer-step" id="stepSelect">
+      <div class="step-label"><span class="step-num">1</span> Upload Satellite Scan</div>
+      <div class="upload-card">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon-wrap">
+            <div class="upload-ring"></div>
+            <div class="upload-icon">🛰️</div>
+          </div>
+          <div class="upload-text">
+            <p class="upload-main">Drag & drop your satellite scan here, or <span class="upload-link">browse files</span></p>
+            <p class="upload-sub">Supports Ash-RGB or raw satellite images (PNG, JPG, JPEG)</p>
+          </div>
+          <input type="file" id="customFile" accept=".png,.jpg,.jpeg" hidden />
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="scan-loading" id="scanLoading" style="display:none">
+      <div class="scan-bar"><div class="scan-bar-fill"></div></div>
+      <p class="scan-text">🛰️ Scanning airspace for contrail formations…</p>
+    </div>
+
+    <!-- STEP 2: Draw Route & Analyze -->
+    <div class="optimizer-step" id="stepDraw" style="display:none">
+      <div class="step-header">
+        <div>
+          <div class="step-label"><span class="step-num">2</span> Draw Flight Route</div>
+          <p class="step-info" id="drawInstruction">Click on the scan to set <strong>Departure (A)</strong></p>
+        </div>
+        <div class="step-actions">
+          <button class="btn-outline" id="resetBtn">↻ Reset Route</button>
+          <button class="btn-outline" id="backBtn">← Upload New Scan</button>
+        </div>
+      </div>
+
+      <!-- Canvas Area (Image + Drawing Overlay) -->
+      <div class="canvas-wrap" id="canvasWrap">
+        <img id="scanImage" class="scan-image" alt="Satellite airspace view" />
+        <canvas id="drawCanvas" class="draw-canvas"></canvas>
+      </div>
+
+      <!-- Scan Metrics -->
+      <div class="metrics-row" id="scanMetricsRow">
+        <div class="metric-card">
+          <div class="metric-icon">📡</div>
+          <div class="metric-val" id="sCoverage">—</div>
+          <div class="metric-lbl">Contrail Coverage</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🎯</div>
+          <div class="metric-val" id="sConfidence">—</div>
+          <div class="metric-lbl">Mean Confidence</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">⚡</div>
+          <div class="metric-val" id="sTime">—</div>
+          <div class="metric-lbl">Scan Time</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🔲</div>
+          <div class="metric-val" id="sPixels">—</div>
+          <div class="metric-lbl">Contrail Pixels</div>
+        </div>
+      </div>
+
+      <!-- Route Analysis Results (appears after drawing) -->
+      <div class="route-analysis" id="routeAnalysis" style="display:none">
+        <h3 class="route-analysis-title">📊 Route Risk Analysis</h3>
+        <div class="route-metrics-grid">
+          <div class="route-stat">
+            <div class="route-stat-val" id="rRisk">—</div>
+            <div class="route-stat-lbl">Risk Score</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-val" id="rPeak">—</div>
+            <div class="route-stat-lbl">Peak Probability</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-val" id="rHotspots">—</div>
+            <div class="route-stat-lbl">Hotspot Zones</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-val" id="rSamples">—</div>
+            <div class="route-stat-lbl">Points Sampled</div>
+          </div>
+        </div>
+        <div class="route-banner" id="routeBanner">
+          <span id="rBannerIcon"></span>
+          <div>
+            <div class="route-banner-title" id="rBannerTitle"></div>
+            <div class="route-banner-text" id="rBannerText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── TRAINING HISTORY ──────────────────────────────────────────────────────── -->
+<section class="section section-dark" id="historySection">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Training History</h2>
+      <p class="section-sub">25-epoch training on 8,000 records — Google Research Contrail Dataset</p>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Loss (Dice + Focal)</div>
+        <canvas id="lossChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Dice Score</div>
+        <canvas id="diceChart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT / ARCHITECTURE ─────────────────────────────────────────────────── -->
+<section class="section" id="aboutSection">
+  <div class="container">
+    <div class="about-grid">
+      <!-- Left: What are contrails -->
+      <div class="about-card">
+        <div class="about-icon">🌍</div>
+        <h3 class="about-title">What Are Contrails?</h3>
+        <p class="about-text">
+          Contrails (condensation trails) are ice-crystal clouds formed in aircraft engine exhaust
+          at high altitudes. They can persist for hours and spread into cirrus-like clouds that trap
+          heat in the atmosphere.
+        </p>
+        <div class="about-highlight">
+          Contrails may contribute <strong>more to aviation warming than CO₂ itself</strong>.
+        </div>
+      </div>
+
+      <!-- Middle: Why optimize routes -->
+      <div class="about-card">
+        <div class="about-icon">✈️</div>
+        <h3 class="about-title">Why Optimize Routes?</h3>
+        <p class="about-text">
+          Using AI to detect contrail-forming zones enables airlines to:
+        </p>
+        <ul class="about-list">
+          <li>📍 Identify contrail-heavy airspace regions</li>
+          <li>✈️ Reroute flights to avoid persistent contrail creation</li>
+          <li>📉 Reduce aviation's climate forcing by up to 54%</li>
+          <li>💰 Achieve this with only ~0.3% additional fuel cost</li>
+        </ul>
+      </div>
+
+      <!-- Right: Model architecture -->
+      <div class="about-card">
+        <div class="about-icon">🤖</div>
+        <h3 class="about-title">Model Architecture</h3>
+        <div class="arch-pipeline" id="archPipeline">
+          <div class="arch-step">
+            <div class="arch-box">Multi-Frame<br/><span class="arch-sub">256×256×9</span></div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-step">
+            <div class="arch-box arch-encoder">EfficientNet-B3<br/><span class="arch-sub">Encoder</span></div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-step">
+            <div class="arch-box arch-decoder">U-Net + scSE<br/><span class="arch-sub">Decoder</span></div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-step">
+            <div class="arch-box arch-output">Mask<br/><span class="arch-sub">256×256×1</span></div>
+          </div>
+        </div>
+        <div class="arch-detail">Loss: 0.5×Dice + 0.5×Focal · Threshold: 0.35</div>
+        <div id="modelInfoPanel" class="model-info-panel"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-icon">✦</span> SkyTrace
+    </div>
+    <div class="footer-text">
+      Built with PyTorch · segmentation-models-pytorch · Flask
+      <br/>Dataset: Google Research — Identify Contrails to Reduce Global Warming
+      <br/>Inspired by <a href="https://research.google/blog/how-ai-is-helping-airlines-mitigate-the-climate-impact-of-contrails/" style="color:var(--cyan)">Google × American Airlines Contrail Avoidance Program</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/main.js"></script>
+</body>
+</html>

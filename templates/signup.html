@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyTrace — Create Account</title>
+  <meta name="description" content="Create a SkyTrace account to access the Flight Route Contrail Optimizer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+  <div class="auth-page">
+    <!-- Background Effects -->
+    <div class="auth-bg">
+      <div class="hero-glow glow-1"></div>
+      <div class="hero-glow glow-2"></div>
+      <div class="star-field" id="starField"></div>
+    </div>
+
+    <!-- Signup Card -->
+    <div class="auth-card auth-card-wide" id="authCard">
+      <!-- Header -->
+      <div class="auth-header">
+        <div class="auth-logo">
+          <span class="brand-icon">✦</span>
+          <span class="auth-logo-text">SkyTrace</span>
+        </div>
+        <h1 class="auth-title">Create Your Account</h1>
+        <p class="auth-subtitle">Join SkyTrace to optimize flight routes and reduce aviation's climate impact</p>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="auth-flash flash-{{ category }}">
+        {% if category == 'error' %}⚠️{% else %}✅{% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+
+      <!-- Signup Form -->
+      <form class="auth-form" method="POST" action="/signup">
+        <div class="form-grid">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label class="form-label" for="full_name">Full Name *</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">👤</span>
+              <input type="text" id="full_name" name="full_name" class="form-input" placeholder="Enter your name"
+                required />
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address *</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">📧</span>
+              <input type="email" id="email" name="email" class="form-input" placeholder="you@airline.com" required
+                autocomplete="email" />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label class="form-label" for="password">Password *</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">🔒</span>
+              <input type="password" id="password" name="password" class="form-input" placeholder="Min. 6 characters"
+                required minlength="6" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm Password *</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">🔒</span>
+              <input type="password" id="confirm_password" name="confirm_password" class="form-input"
+                placeholder="••••••••" required minlength="6" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <!-- Role -->
+          <div class="form-group">
+            <label class="form-label" for="role">Role</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">✈️</span>
+              <select id="role" name="role" class="form-input form-select">
+                <option value="Flight Dispatcher">Flight Dispatcher</option>
+                <option value="Route Analyst">Route Analyst</option>
+                <option value="Climate Researcher">Climate Researcher</option>
+                <option value="Aviation Admin">Aviation Admin</option>
+                <option value="Pilot">Pilot</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Organization -->
+          <div class="form-group">
+            <label class="form-label" for="organization">Organization</label>
+            <div class="form-input-wrap">
+              <span class="form-icon">🏢</span>
+              <input type="text" id="organization" name="organization" class="form-input"
+                placeholder="e.g. Delta Airlines (optional)" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="signupBtn">
+          <span>Create Account</span>
+          <span class="auth-btn-arrow">→</span>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="auth-footer">
+        <p>Already have an account? <a href="/login" class="auth-link">Sign in</a></p>
+      </div>
+
+      <!-- Decorative -->
+      <div class="auth-badge-row">
+        <span class="badge badge-model">U-Net + EfficientNet-B3</span>
+        <span class="badge badge-dice">Dice 0.4827</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Star field script -->
+  <script>
+    (function () {
+      const field = document.getElementById("starField");
+      if (!field) return;
+      for (let i = 0; i < 80; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
+        const size = Math.random() * 2.5 + 0.5;
+        star.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random() * 100}%;
+      left:${Math.random() * 100}%;
+      --dur:${(Math.random() * 4 + 2).toFixed(1)}s;
+      --delay:-${(Math.random() * 5).toFixed(1)}s;
+    `;
+        field.appendChild(star);
+      }
+    })();
+  </script>
+</body>
+
+</html>

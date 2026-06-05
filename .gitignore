@@ -1,0 +1,43 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+.npmrc
+.pypirc
+.netrc
+.git-credentials
+.idea/
+.vscode/
+venv/
+.venv/
+env/
+*.log
+*.tmp
+*.bak
+*.swp
+
+# SQLite Local Database
+users.db
+
+# Model Backup Directories
+Old Model/
+new model/
+
+# Old Single-Frame Training Pipeline (keeping model_1.py as the active one)
+model.py
+
+# Presentation Scripts / internal documentation
+presentation_script.md
+
+# Static Evaluation Output Images (re-generated during training/eval)
+confusion_matrix.png
+predictions.png
+training_curves.png
+
+# Unused Preset Satellite Scan PNGs (kept locally for reference)
+1000834164244036115_ash.png
+1002653297254493116_ash.png
